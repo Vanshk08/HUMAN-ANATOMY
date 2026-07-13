@@ -14,7 +14,7 @@ This is the React 19 + Vite + Tailwind CSS + Three.js client for the Interactive
 
 ## Key Components
 - `ViewerCanvas.jsx`: Setting up the R3F scene, camera interpolation, lighting, and contact shadows.
-- `HumanModel.jsx`: Handles loading `/public/models/human.glb` and includes a full fallback `ProceduralMannequin` component made of individual translucent layers (Skin, Muscles, Bones, Vessels, Nerves, and Organs).
+- `AnatomyLoader.jsx`: Handles loading `/public/models/human.glb` and includes a full fallback `ProceduralMannequin` component made of individual translucent layers (Skin, Muscles, Bones, Vessels, Nerves, and Organs).
 - `NavigationCube.jsx`: Interactive Blender-style navigation cube built using CSS 3D transforms.
 - `Sidebar.jsx` & `FloatingToolbar.jsx`: Manage pose selections and layered visibility controls.
 

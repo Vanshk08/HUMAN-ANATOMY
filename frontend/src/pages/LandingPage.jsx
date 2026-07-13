@@ -4,7 +4,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { ContactShadows, Environment } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import { FiArrowRight, FiActivity } from 'react-icons/fi';
-import HumanModel from '../components/HumanModel';
+import AnatomyLoader from "../components/AnatomyLoader";
 import { useAnatomyStore } from '../store/useAnatomyStore';
 import ThemeToggle from '../components/ThemeToggle';
 
@@ -19,7 +19,7 @@ function RotatingModel() {
 
   return (
     <group ref={modelRef} position={[0, -0.85, 0]}>
-      <HumanModel />
+      <AnatomyLoader />
     </group>
   );
 }
