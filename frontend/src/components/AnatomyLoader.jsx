@@ -1,8 +1,10 @@
 import { Suspense, useEffect, useMemo } from "react";
 import { useGLTF } from "@react-three/drei";
+
 import { buildMeshRegistry, findMesh } from "../utils/meshUtils";
 import useRaycastSelection from "../hooks/useRaycastSelection";
 import { useAnatomyStore } from "../store/useAnatomyStore";
+import { initializeMaterials } from "../rendering/materialManager";
 
 function Skeleton() {
   const { scene } = useGLTF("/models/skeleton.glb");
@@ -17,20 +19,19 @@ function Skeleton() {
     (state) => state.clearSelectedStructure
   );
 
-  // Build the mesh registry only once per loaded scene
+  // Build mesh registry once
   const registry = useMemo(() => {
     return buildMeshRegistry(scene);
   }, [scene]);
 
+  // Initialize rendering resources once
   useEffect(() => {
+    initializeMaterials(scene);
+
     console.group("ANATOMY MODEL");
-
     console.log("Mesh Count:", registry.size);
-    console.log("Femur:", registry.get("Femur"));
-    console.log("Radius:", registry.get("Radius"));
-
     console.groupEnd();
-  }, [registry]);
+  }, [scene, registry]);
 
   function handlePointerDown(event) {
     event.stopPropagation();
@@ -45,7 +46,7 @@ function Skeleton() {
 
     const clickedMesh = intersections[0].object;
 
-    const selectedMesh = findMesh(registry, clickedMesh.name);
+    const selectedMesh = findMesh(registry, clickedMesh.uuid);
 
     if (!selectedMesh) {
       clearSelectedStructure();

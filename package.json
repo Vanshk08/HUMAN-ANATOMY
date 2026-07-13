@@ -10,5 +10,9 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@react-three/postprocessing": "^3.0.4",
+    "postprocessing": "^6.39.2"
   }
 }
