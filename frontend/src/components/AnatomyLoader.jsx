@@ -1,10 +1,19 @@
 import { Suspense, useEffect, useMemo } from "react";
 import { useGLTF } from "@react-three/drei";
 
-import { buildMeshRegistry, findMesh } from "../utils/meshUtils";
+import { buildMeshRegistry } from "../utils/meshUtils";
 import useRaycastSelection from "../hooks/useRaycastSelection";
 import { useAnatomyStore } from "../store/useAnatomyStore";
 import { initializeMaterials } from "../rendering/materialManager";
+
+import {
+  getRegistrySize,
+  getStructureByUUID,
+} from "../anatomy/anatomyRegistry";
+
+import { initializeAnatomy } from "../anatomy/anatomyEngine";
+
+import { printModelReport } from "../utils/modelInspector";
 
 function Skeleton() {
   const { scene } = useGLTF("/models/skeleton.glb");
@@ -24,6 +33,15 @@ function Skeleton() {
     return buildMeshRegistry(scene);
   }, [scene]);
 
+  // Populate Anatomy Registry
+  useEffect(() => {
+  initializeAnatomy(registry);
+
+  console.log(
+    `Registered ${getRegistrySize()} anatomical structures.`
+  );
+}, [registry]);
+
   // Initialize rendering resources once
   useEffect(() => {
     initializeMaterials(scene);
@@ -31,6 +49,8 @@ function Skeleton() {
     console.group("ANATOMY MODEL");
     console.log("Mesh Count:", registry.size);
     console.groupEnd();
+
+    printModelReport(registry);
   }, [scene, registry]);
 
   function handlePointerDown(event) {
@@ -46,16 +66,16 @@ function Skeleton() {
 
     const clickedMesh = intersections[0].object;
 
-    const selectedMesh = findMesh(registry, clickedMesh.uuid);
+    const selectedStructure = getStructureByUUID(clickedMesh.uuid);
 
-    if (!selectedMesh) {
+    if (!selectedStructure) {
       clearSelectedStructure();
       return;
     }
 
-    setSelectedStructure(selectedMesh);
+    setSelectedStructure(selectedStructure);
 
-    console.log("Selected:", selectedMesh.name);
+    console.log("Selected:", selectedStructure.name);
   }
 
   return (
