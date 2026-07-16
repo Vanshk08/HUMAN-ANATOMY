@@ -1,21 +1,18 @@
-import {
-  clearRegistry,
-  registerStructure,
-} from "./anatomyRegistry";
-
+import { registerStructure } from "./anatomyRegistry";
 import { resolveMetadata } from "./metadataResolver";
 
 /**
- * Initializes the Anatomy Registry from a mesh registry.
+ * Initializes anatomical structures from a mesh registry.
  *
- * Translates Three.js meshes into anatomy-domain objects.
+ * NOTE:
+ * This function no longer clears the registry.
+ * The registry lifecycle is now controlled by the application,
+ * not by individual anatomy systems.
  */
-export function initializeAnatomy(meshRegistry) {
-  clearRegistry();
-
+export function initializeAnatomy(meshRegistry, system) {
   meshRegistry.forEach((mesh) => {
-  const structure = resolveMetadata(mesh);
+    const structure = resolveMetadata(mesh, system);
 
-  registerStructure(structure);
-});
+    registerStructure(structure);
+  });
 }
