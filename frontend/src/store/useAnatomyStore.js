@@ -49,14 +49,17 @@ export const useAnatomyStore = create((set, get) => ({
   // Layer Visibility
   // =====================================================
 
-  visibilitySettings: {
-    skin: true,
-    muscles: false,
-    skeleton: false,
-    veins: false,
-    nervous: false,
-    organs: false,
-  },
+    visibilitySettings: {
+  skin: false,
+
+  skeleton: true,
+  muscles: true,
+  nervous: true,
+  cardiovascular: true,
+
+  veins: false,
+  organs: false,
+},
 
   toggleVisibility: (layerId) =>
     set((state) => ({

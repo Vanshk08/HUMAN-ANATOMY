@@ -3,11 +3,12 @@ import AnatomySystem from "./AnatomySystem";
 import { clearRegistry } from "../anatomy/anatomyRegistry";
 
 export default function AnatomyLoader() {
-   useEffect(() => {
+  useEffect(() => {
     clearRegistry();
 
     console.log("Anatomy Registry initialized.");
   }, []);
+
   return (
     <Suspense fallback={null}>
       <AnatomySystem
@@ -18,6 +19,16 @@ export default function AnatomyLoader() {
       <AnatomySystem
         modelPath="/models/muscles.glb"
         system="muscles"
+      />
+
+      <AnatomySystem
+        modelPath="/models/nervous.glb"
+        system="nervous"
+      />
+
+      <AnatomySystem
+        modelPath="/models/cardiovascular.glb"
+        system="cardiovascular"
       />
     </Suspense>
   );
