@@ -1,35 +1,26 @@
 import { Suspense, useEffect } from "react";
+
 import AnatomySystem from "./AnatomySystem";
 import { clearRegistry } from "../anatomy/anatomyRegistry";
+import { anatomySystems } from "../anatomy/anatomySystems";
 
 export default function AnatomyLoader() {
   useEffect(() => {
     clearRegistry();
-
     console.log("Anatomy Registry initialized.");
   }, []);
 
   return (
     <Suspense fallback={null}>
-      <AnatomySystem
-        modelPath="/models/skeleton.glb"
-        system="skeleton"
-      />
-
-      <AnatomySystem
-        modelPath="/models/muscles.glb"
-        system="muscles"
-      />
-
-      <AnatomySystem
-        modelPath="/models/nervous.glb"
-        system="nervous"
-      />
-
-      <AnatomySystem
-        modelPath="/models/cardiovascular.glb"
-        system="cardiovascular"
-      />
+      {anatomySystems
+        .filter((system) => system.modelPath)
+        .map((system) => (
+          <AnatomySystem
+            key={system.id}
+            modelPath={system.modelPath}
+            system={system.id}
+          />
+        ))}
     </Suspense>
   );
 }

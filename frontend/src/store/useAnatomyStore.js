@@ -1,4 +1,10 @@
 import { create } from 'zustand';
+import { anatomySystems } from "../anatomy/anatomySystems";
+
+const initialVisibilitySettings = anatomySystems.reduce((settings, system) => {
+  settings[system.id] = system.defaultVisible;
+  return settings;
+}, {});
 
 export const useAnatomyStore = create((set, get) => ({
   // =====================================================
@@ -49,17 +55,7 @@ export const useAnatomyStore = create((set, get) => ({
   // Layer Visibility
   // =====================================================
 
-    visibilitySettings: {
-  skin: false,
-
-  skeleton: true,
-  muscles: true,
-  nervous: true,
-  cardiovascular: true,
-
-  veins: false,
-  organs: false,
-},
+visibilitySettings: initialVisibilitySettings,
 
   toggleVisibility: (layerId) =>
     set((state) => ({

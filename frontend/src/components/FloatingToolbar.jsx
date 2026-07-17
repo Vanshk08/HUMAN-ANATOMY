@@ -19,8 +19,8 @@ export default function FloatingToolbar() {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5">
             <path d="M12 3a6 6 0 0 0-9 9c0 4.5 4.5 9 9 9s9-4.5 9-9a6 6 0 0 0-9-9z" />
             <path d="M12 3v18" />
-            <path d="M7 8c1.5 2 3.5 3 5 4s3.5 2 5 4" />
-            <path d="M17 8c-1.5 2-3.5 3-5 4-3.5 2-5 4" />
+            <path d="M7 8 Q10 10 12 12 T17 16" />
+            <path d="M17 8 Q14 10 12 12 T7 16" />
           </svg>
         );
       case 'skeleton':
@@ -34,12 +34,42 @@ export default function FloatingToolbar() {
             <circle cx="12" cy="4" r="1.5" fill="currentColor" />
           </svg>
         );
-      case 'veins':
+      case 'cardiovascular':
         return (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-4.5 h-4.5"
+          >
+            <path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 6.5-7 11-7 11z" />
           </svg>
         );
+        case 'lymphatic':
+          return (
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-4.5 h-4.5"
+            >
+              <circle cx="12" cy="12" r="2" />
+              <circle cx="12" cy="5" r="1.2" />
+              <circle cx="19" cy="12" r="1.2" />
+              <circle cx="12" cy="19" r="1.2" />
+              <circle cx="5" cy="12" r="1.2" />
+              <line x1="12" y1="6.2" x2="12" y2="10" />
+              <line x1="18" y1="12" x2="14" y2="12" />
+              <line x1="12" y1="14" x2="12" y2="18" />
+              <line x1="6" y1="12" x2="10" y2="12" />
+            </svg>
+          );
       case 'nervous':
         return (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5">

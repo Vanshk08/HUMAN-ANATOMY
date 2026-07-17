@@ -2,12 +2,55 @@
 // Camera positions and targets are optimized for a 3D mannequin model of height ~2.0 units centered at Y = 1.0.
 
 const LAYERS = [
-  { id: 'skin', name: 'Skin', displayName: 'Skin', defaultVisible: true, icon: 'skin' },
-  { id: 'muscles', name: 'Muscles', displayName: 'Muscles', defaultVisible: false, icon: 'muscles' },
-  { id: 'skeleton', name: 'Skeleton', displayName: 'Skeleton', defaultVisible: false, icon: 'skeleton' },
-  { id: 'veins', name: 'Veins', displayName: 'Veins & Arteries', defaultVisible: false, icon: 'veins' },
-  { id: 'nervous', name: 'Nervous System', displayName: 'Nervous System', defaultVisible: false, icon: 'nerves' },
-  { id: 'organs', name: 'Organs', displayName: 'Internal Organs', defaultVisible: false, icon: 'organs' }
+  {
+    id: 'skin',
+    name: 'Skin',
+    displayName: 'Skin',
+    defaultVisible: true,
+    icon: 'skin',
+  },
+  {
+    id: 'muscles',
+    name: 'Muscles',
+    displayName: 'Muscles',
+    defaultVisible: false,
+    icon: 'muscles',
+  },
+  {
+    id: 'skeleton',
+    name: 'Skeleton',
+    displayName: 'Skeleton',
+    defaultVisible: false,
+    icon: 'skeleton',
+  },
+  {
+    id: 'cardiovascular',
+    name: 'Cardiovascular System',
+    displayName: 'Cardiovascular System',
+    defaultVisible: false,
+    icon: 'cardiovascular',
+  },
+  {
+    id: 'lymphatic',
+    name: 'Lymphatic System',
+    displayName: 'Lymphatic System',
+    defaultVisible: false,
+    icon: 'lymphatic',
+  },
+  {
+    id: 'nervous',
+    name: 'Nervous System',
+    displayName: 'Nervous System',
+    defaultVisible: false,
+    icon: 'nerves',
+  },
+  {
+    id: 'organs',
+    name: 'Organs',
+    displayName: 'Internal Organs',
+    defaultVisible: false,
+    icon: 'organs',
+  },
 ];
 
 const BODY_PARTS = [
