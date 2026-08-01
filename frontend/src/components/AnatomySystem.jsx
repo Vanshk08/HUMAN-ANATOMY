@@ -2,14 +2,14 @@ import { useEffect, useMemo } from "react";
 import { useGLTF } from "@react-three/drei";
 
 import { buildMeshRegistry } from "../utils/meshUtils";
-import useRaycastSelection from "../hooks/useRaycastSelection";
 import { useAnatomyStore } from "../store/useAnatomyStore";
 
 import { initializeMaterials } from "../rendering/materialManager";
 
+import { resolveSelection } from "../anatomy/selectionResolver";
+
 import {
   getRegistrySize,
-  getStructureByUUID,
 } from "../anatomy/anatomyRegistry";
 
 import { initializeAnatomy } from "../anatomy/anatomyEngine";
@@ -31,17 +31,16 @@ export default function AnatomySystem({
   const { scene } = useGLTF(modelPath);
 
   // =====================================================
-  // Interaction
+  // Global Selection State
+  // Sprint 8.5.4
   // =====================================================
 
-  const { getIntersections } = useRaycastSelection();
-
-  const setSelectedStructure = useAnatomyStore(
-    (state) => state.setSelectedStructure
+  const setSelectionContext = useAnatomyStore(
+    (state) => state.setSelectionContext
   );
 
-  const clearSelectedStructure = useAnatomyStore(
-    (state) => state.clearSelectedStructure
+  const clearSelectionContext = useAnatomyStore(
+    (state) => state.clearSelectionContext
   );
 
   // =====================================================
@@ -85,10 +84,13 @@ export default function AnatomySystem({
   // =====================================================
 
   useEffect(() => {
-    initializeAnatomy(registry, system);
+    initializeAnatomy(
+      registry,
+      system
+    );
 
     console.log(
-      `[${system}] Registered ${getRegistrySize()} anatomical structures.`
+      `[${system}] Global registry size: ${getRegistrySize()}`
     );
   }, [registry, system]);
 
@@ -99,12 +101,23 @@ export default function AnatomySystem({
   useEffect(() => {
     initializeMaterials(scene);
 
-    console.group(`${system.toUpperCase()} MODEL`);
-    console.log("Mesh Count:", registry.size);
+    console.group(
+      `${system.toUpperCase()} MODEL`
+    );
+
+    console.log(
+      "Mesh Count:",
+      registry.size
+    );
+
     console.groupEnd();
 
     printModelReport(registry);
-  }, [scene, registry, system]);
+  }, [
+    scene,
+    registry,
+    system,
+  ]);
 
   // =====================================================
   // Visceral Subsystem Classification Report
@@ -120,12 +133,16 @@ export default function AnatomySystem({
 
     const counts = {};
 
-    visceralSubsystemRegistry.forEach((subsystem) => {
-      counts[subsystem] =
-        (counts[subsystem] || 0) + 1;
-    });
+    visceralSubsystemRegistry.forEach(
+      (subsystem) => {
+        counts[subsystem] =
+          (counts[subsystem] || 0) + 1;
+      }
+    );
 
-    console.group("VISCERAL SUBSYSTEM REGISTRY");
+    console.group(
+      "VISCERAL SUBSYSTEM REGISTRY"
+    );
 
     console.log(
       "Total visceral meshes:",
@@ -166,17 +183,22 @@ export default function AnatomySystem({
 
     registry.forEach((mesh) => {
       const subsystem =
-        visceralSubsystemRegistry.get(mesh.uuid);
+        visceralSubsystemRegistry.get(
+          mesh.uuid
+        );
 
-      // Defensive fallback.
-      // Never accidentally hide an unclassified structure.
+      // Defensive fallback:
+      // never accidentally hide an
+      // unclassified visceral structure.
       if (!subsystem) {
         mesh.visible = true;
         return;
       }
 
       mesh.visible =
-        visceralSubsystemVisibility[subsystem] ?? true;
+        visceralSubsystemVisibility[
+          subsystem
+        ] ?? true;
     });
   }, [
     system,
@@ -186,53 +208,167 @@ export default function AnatomySystem({
   ]);
 
   // =====================================================
-  // Selection
+  // Whole-Body Selection
+  // Sprint 8.5.4
+  //
+  // React Three Fiber already performs raycasting.
+  // event.object is the actual intersected mesh.
   // =====================================================
 
   function handlePointerDown(event) {
+    // ===================================================
+    // STEP 1 — Verify R3F Event
+    // ===================================================
+
+    console.log("CLICK DETECTED");
+
     event.stopPropagation();
 
-    const intersections = getIntersections(
-      event,
-      [scene]
-    );
+    // ===================================================
+    // STEP 2 — Actual Intersected Mesh
+    // ===================================================
 
-    if (intersections.length === 0) {
-      clearSelectedStructure();
-      return;
-    }
-
-    const clickedMesh =
-      intersections[0].object;
-
-    const selectedStructure =
-      getStructureByUUID(clickedMesh.uuid);
-
-    if (!selectedStructure) {
-      clearSelectedStructure();
-      return;
-    }
-
-    setSelectedStructure(selectedStructure);
+    const clickedMesh = event.object;
 
     console.log(
-      `[${system}]`,
-      selectedStructure.name
+      "EVENT OBJECT:",
+      clickedMesh
     );
+
+    console.log(
+      "EVENT OBJECT NAME:",
+      clickedMesh?.name
+    );
+
+    console.log(
+      "EVENT OBJECT UUID:",
+      clickedMesh?.uuid
+    );
+
+    console.log(
+      "CURRENT SYSTEM:",
+      system
+    );
+
+    // ===================================================
+    // STEP 3 — Validate Mesh
+    // ===================================================
+
+    if (!clickedMesh?.uuid) {
+      console.warn(
+        "CLICKED OBJECT HAS NO UUID"
+      );
+
+      clearSelectionContext();
+      return;
+    }
+
+    console.log(
+      "CLICKED MESH VALID"
+    );
+
+    // ===================================================
+    // STEP 4 — Resolve Canonical Selection Context
+    // ===================================================
+
+    const selectionContext =
+      resolveSelection(
+        clickedMesh
+      );
+
+    console.log(
+      "RESOLVED SELECTION CONTEXT:",
+      selectionContext
+    );
+
+    if (!selectionContext) {
+      console.warn(
+        `[${system}] Selection resolver returned null`
+      );
+
+      clearSelectionContext();
+      return;
+    }
+
+    // ===================================================
+    // STEP 5 — Write Selection Context → Zustand
+    // ===================================================
+
+    setSelectionContext(
+      selectionContext
+    );
+
+    // ===================================================
+    // STEP 6 — Verify Zustand
+    // ===================================================
+
+    const storeState =
+      useAnatomyStore.getState();
+
+    console.log(
+      `[${system}] ZUSTAND SELECTION`,
+      {
+        selectedStructure:
+          storeState.selectedStructure,
+
+        selectedSystem:
+          storeState.selectedSystem,
+
+        selectedSubsystem:
+          storeState.selectedSubsystem,
+
+        selectionContext:
+          storeState.selectionContext,
+      }
+    );
+
+    // ===================================================
+    // Final Selection Report
+    // ===================================================
+
+    console.group(
+      `[${system}] GLOBAL SELECTION`
+    );
+
+    console.log(
+      "Structure:",
+      selectionContext.structure
+    );
+
+    console.log(
+      "System:",
+      selectionContext.system
+    );
+
+    console.log(
+      "Subsystem:",
+      selectionContext.subsystem
+    );
+
+    console.log(
+      "Mesh UUID:",
+      selectionContext.meshUUID
+    );
+
+    console.groupEnd();
   }
 
   // =====================================================
-  // Render
+  // Render / Interaction Boundary
+  //
+  // Hidden systems must not participate in raycasting.
   // =====================================================
 
+  if (!visible) {
+    return null;
+  }
+
   return (
-    <group visible={visible}>
-      <primitive
-        object={scene}
-        scale={1}
-        position={[0, 0, 0]}
-        onPointerDown={handlePointerDown}
-      />
-    </group>
+    <primitive
+      object={scene}
+      scale={1}
+      position={[0, 0, 0]}
+      onPointerDown={handlePointerDown}
+    />
   );
 }

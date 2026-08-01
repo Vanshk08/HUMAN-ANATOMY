@@ -16,6 +16,14 @@ export const anatomySystems = [
   },
 
   {
+  id: "joints",
+  displayName: "Joints",
+  modelPath: "/models/joints.glb",
+  defaultVisible: true,
+  icon: "joints",
+  },
+  
+  {
     id: "muscles",
     displayName: "Muscles",
     modelPath: "/models/muscles.glb",

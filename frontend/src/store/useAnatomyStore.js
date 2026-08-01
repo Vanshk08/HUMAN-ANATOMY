@@ -39,25 +39,40 @@ export const useAnatomyStore = create((set, get) => ({
 
   toggleTheme: () =>
     set((state) => {
-      const nextTheme = state.theme === "light" ? "dark" : "light";
+      const nextTheme =
+        state.theme === "light"
+          ? "dark"
+          : "light";
 
       if (nextTheme === "dark") {
-        document.documentElement.classList.add("dark");
+        document.documentElement.classList.add(
+          "dark"
+        );
       } else {
-        document.documentElement.classList.remove("dark");
+        document.documentElement.classList.remove(
+          "dark"
+        );
       }
 
-      return { theme: nextTheme };
+      return {
+        theme: nextTheme,
+      };
     }),
 
   setTheme: (theme) => {
     if (theme === "dark") {
-      document.documentElement.classList.add("dark");
+      document.documentElement.classList.add(
+        "dark"
+      );
     } else {
-      document.documentElement.classList.remove("dark");
+      document.documentElement.classList.remove(
+        "dark"
+      );
     }
 
-    set({ theme });
+    set({
+      theme,
+    });
   },
 
   // =====================================================
@@ -68,9 +83,20 @@ export const useAnatomyStore = create((set, get) => ({
   bodyParts: [],
   poses: [],
 
-  setLayers: (layers) => set({ layers }),
-  setBodyParts: (bodyParts) => set({ bodyParts }),
-  setPoses: (poses) => set({ poses }),
+  setLayers: (layers) =>
+    set({
+      layers,
+    }),
+
+  setBodyParts: (bodyParts) =>
+    set({
+      bodyParts,
+    }),
+
+  setPoses: (poses) =>
+    set({
+      poses,
+    }),
 
   isLoading: true,
 
@@ -83,20 +109,27 @@ export const useAnatomyStore = create((set, get) => ({
   // Layer Visibility
   // =====================================================
 
-  visibilitySettings: initialVisibilitySettings,
+  visibilitySettings:
+    initialVisibilitySettings,
 
   toggleVisibility: (layerId) =>
     set((state) => ({
       visibilitySettings: {
         ...state.visibilitySettings,
-        [layerId]: !state.visibilitySettings[layerId],
+
+        [layerId]:
+          !state.visibilitySettings[layerId],
       },
     })),
 
-  setVisibility: (layerId, isVisible) =>
+  setVisibility: (
+    layerId,
+    isVisible
+  ) =>
     set((state) => ({
       visibilitySettings: {
         ...state.visibilitySettings,
+
         [layerId]: isVisible,
       },
     })),
@@ -109,13 +142,17 @@ export const useAnatomyStore = create((set, get) => ({
   visceralSubsystemVisibility:
     initialVisceralSubsystemVisibility,
 
-  toggleVisceralSubsystem: (subsystemId) =>
+  toggleVisceralSubsystem: (
+    subsystemId
+  ) =>
     set((state) => ({
       visceralSubsystemVisibility: {
         ...state.visceralSubsystemVisibility,
 
         [subsystemId]:
-          !state.visceralSubsystemVisibility[subsystemId],
+          !state.visceralSubsystemVisibility[
+            subsystemId
+          ],
       },
     })),
 
@@ -131,18 +168,22 @@ export const useAnatomyStore = create((set, get) => ({
       },
     })),
 
-  setAllVisceralSubsystems: (isVisible) =>
+  setAllVisceralSubsystems: (
+    isVisible
+  ) =>
     set((state) => {
       const nextVisibility = {};
 
       Object.keys(
         state.visceralSubsystemVisibility
       ).forEach((subsystemId) => {
-        nextVisibility[subsystemId] = isVisible;
+        nextVisibility[subsystemId] =
+          isVisible;
       });
 
       return {
-        visceralSubsystemVisibility: nextVisibility,
+        visceralSubsystemVisibility:
+          nextVisibility,
       };
     }),
 
@@ -166,7 +207,8 @@ export const useAnatomyStore = create((set, get) => ({
 
       return {
         currentLayer: layerId,
-        visibilitySettings: newVisibility,
+        visibilitySettings:
+          newVisibility,
       };
     }),
 
@@ -176,38 +218,81 @@ export const useAnatomyStore = create((set, get) => ({
 
   selectedBodyPart: null,
 
-  setSelectedBodyPart: (bodyPartId) => {
+  setSelectedBodyPart: (
+    bodyPartId
+  ) => {
     set({
       selectedBodyPart: bodyPartId,
     });
 
     if (bodyPartId) {
       const part = get().bodyParts.find(
-        (bodyPart) => bodyPart.id === bodyPartId
+        (bodyPart) =>
+          bodyPart.id === bodyPartId
       );
 
       if (part) {
         set({
-          cameraPosition: part.cameraPosition,
-          cameraTarget: part.cameraTarget,
+          cameraPosition:
+            part.cameraPosition,
+
+          cameraTarget:
+            part.cameraTarget,
         });
       }
     }
   },
 
   // =====================================================
-  // Selected Anatomical Structure
+  // Selection State
+  // Sprint 8.5.4
+  //
+  // selectionContext is the canonical whole-body
+  // selection state.
+  //
+  // selectedStructure remains temporarily for
+  // backwards compatibility with existing UI.
   // =====================================================
 
   selectedStructure: null,
 
-  setSelectedStructure: (structure) =>
+  selectionContext: null,
+
+  // -----------------------------------------------------
+  // Legacy Structure Selection
+  // -----------------------------------------------------
+
+  setSelectedStructure: (
+    structure
+  ) =>
     set({
       selectedStructure: structure,
     }),
 
   clearSelectedStructure: () =>
     set({
+      selectedStructure: null,
+    }),
+
+  // -----------------------------------------------------
+  // Whole-Body Selection Context
+  // -----------------------------------------------------
+
+  setSelectionContext: (
+    context
+  ) =>
+    set({
+      selectionContext: context,
+
+      // Keep legacy selection synchronized
+      // during the migration.
+      selectedStructure:
+        context?.structure ?? null,
+    }),
+
+  clearSelectionContext: () =>
+    set({
+      selectionContext: null,
       selectedStructure: null,
     }),
 
@@ -238,7 +323,10 @@ export const useAnatomyStore = create((set, get) => ({
     z: 0,
   },
 
-  setCamera: (position, target) =>
+  setCamera: (
+    position,
+    target
+  ) =>
     set({
       cameraPosition: position,
       cameraTarget: target,
@@ -259,6 +347,9 @@ export const useAnatomyStore = create((set, get) => ({
       },
 
       selectedBodyPart: null,
+
+      // Clear both selection APIs.
       selectedStructure: null,
+      selectionContext: null,
     }),
 }));

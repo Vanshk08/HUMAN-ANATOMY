@@ -4,8 +4,14 @@ import { resolveStructureId } from "./structureIdResolver";
 /**
  * Resolves a Three.js mesh into the canonical
  * anatomy structure.
+ *
+ * The physical system is supplied by the runtime
+ * that owns the loaded GLB.
  */
-export function resolveMetadata(mesh) {
+export function resolveMetadata(mesh, system) {
+  const displayName =
+    mesh.name || "Unknown Structure";
+
   return {
     ...DEFAULT_STRUCTURE,
 
@@ -13,18 +19,22 @@ export function resolveMetadata(mesh) {
 
     id: resolveStructureId(mesh),
 
-    displayName: mesh.name || "Unknown Structure",
+    // Canonical registry fields
+    name: displayName,
+    system: system ?? null,
 
-    latinName: "",
-
-    aliases: [],
-
-    system: "Skeleton",
-
-    category: "",
-
+    latin: "",
+    description: "",
     region: "",
 
+    visible: true,
+    selectable: true,
+
+    // Extended metadata
+    displayName,
+    latinName: "",
+    aliases: [],
+    category: "",
     side: "",
   };
 }

@@ -24,6 +24,14 @@ const LAYERS = [
     icon: 'skeleton',
   },
   {
+  id: 'joints',
+  name: 'Joints',
+  displayName: 'Joints',
+  defaultVisible: false,
+  icon: 'joints',
+  },
+  
+  {
     id: 'cardiovascular',
     name: 'Cardiovascular System',
     displayName: 'Cardiovascular System',
