@@ -44,6 +44,15 @@ const LAYERS = [
     defaultVisible: false,
     icon: 'nerves',
   },
+  
+  {
+  id: 'visceral',
+  name: 'Visceral Systems',
+  displayName: 'Visceral Systems',
+  defaultVisible: false,
+  icon: 'organs',
+  },
+
   {
     id: 'organs',
     name: 'Organs',

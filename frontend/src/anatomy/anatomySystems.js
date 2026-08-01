@@ -48,6 +48,14 @@ export const anatomySystems = [
   },
 
   {
+  id: "visceral",
+  displayName: "Visceral Systems",
+  modelPath: "/models/visceral.glb",
+  defaultVisible: true,
+  icon: "organs",
+  },
+
+  {
     id: "organs",
     displayName: "Internal Organs",
     modelPath: null,

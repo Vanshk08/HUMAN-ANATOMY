@@ -1,36 +1,60 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 import { anatomySystems } from "../anatomy/anatomySystems";
 
-const initialVisibilitySettings = anatomySystems.reduce((settings, system) => {
-  settings[system.id] = system.defaultVisible;
-  return settings;
-}, {});
+// =====================================================
+// Initial Layer Visibility
+// =====================================================
+
+const initialVisibilitySettings = anatomySystems.reduce(
+  (settings, system) => {
+    settings[system.id] = system.defaultVisible;
+    return settings;
+  },
+  {}
+);
+
+// =====================================================
+// Initial Visceral Subsystem Visibility
+// Sprint 8.4
+// =====================================================
+
+const initialVisceralSubsystemVisibility = {
+  respiratory: true,
+  digestive: true,
+  urinary: true,
+  endocrine: true,
+  reproductive: true,
+};
+
+// =====================================================
+// Anatomy Store
+// =====================================================
 
 export const useAnatomyStore = create((set, get) => ({
   // =====================================================
   // Theme
   // =====================================================
 
-  theme: 'light',
+  theme: "light",
 
   toggleTheme: () =>
     set((state) => {
-      const nextTheme = state.theme === 'light' ? 'dark' : 'light';
+      const nextTheme = state.theme === "light" ? "dark" : "light";
 
-      if (nextTheme === 'dark') {
-        document.documentElement.classList.add('dark');
+      if (nextTheme === "dark") {
+        document.documentElement.classList.add("dark");
       } else {
-        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.remove("dark");
       }
 
       return { theme: nextTheme };
     }),
 
   setTheme: (theme) => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
 
     set({ theme });
@@ -49,13 +73,17 @@ export const useAnatomyStore = create((set, get) => ({
   setPoses: (poses) => set({ poses }),
 
   isLoading: true,
-  setIsLoading: (isLoading) => set({ isLoading }),
+
+  setIsLoading: (isLoading) =>
+    set({
+      isLoading,
+    }),
 
   // =====================================================
   // Layer Visibility
   // =====================================================
 
-visibilitySettings: initialVisibilitySettings,
+  visibilitySettings: initialVisibilitySettings,
 
   toggleVisibility: (layerId) =>
     set((state) => ({
@@ -74,10 +102,55 @@ visibilitySettings: initialVisibilitySettings,
     })),
 
   // =====================================================
+  // Visceral Subsystem Visibility
+  // Sprint 8.4
+  // =====================================================
+
+  visceralSubsystemVisibility:
+    initialVisceralSubsystemVisibility,
+
+  toggleVisceralSubsystem: (subsystemId) =>
+    set((state) => ({
+      visceralSubsystemVisibility: {
+        ...state.visceralSubsystemVisibility,
+
+        [subsystemId]:
+          !state.visceralSubsystemVisibility[subsystemId],
+      },
+    })),
+
+  setVisceralSubsystemVisibility: (
+    subsystemId,
+    isVisible
+  ) =>
+    set((state) => ({
+      visceralSubsystemVisibility: {
+        ...state.visceralSubsystemVisibility,
+
+        [subsystemId]: isVisible,
+      },
+    })),
+
+  setAllVisceralSubsystems: (isVisible) =>
+    set((state) => {
+      const nextVisibility = {};
+
+      Object.keys(
+        state.visceralSubsystemVisibility
+      ).forEach((subsystemId) => {
+        nextVisibility[subsystemId] = isVisible;
+      });
+
+      return {
+        visceralSubsystemVisibility: nextVisibility,
+      };
+    }),
+
+  // =====================================================
   // Active Layer
   // =====================================================
 
-  currentLayer: 'skin',
+  currentLayer: "skin",
 
   activateLayer: (layerId) =>
     set((state) => {
@@ -85,7 +158,7 @@ visibilitySettings: initialVisibilitySettings,
         ...state.visibilitySettings,
       };
 
-      if (layerId !== 'skin') {
+      if (layerId !== "skin") {
         newVisibility.skin = false;
       }
 
@@ -104,10 +177,14 @@ visibilitySettings: initialVisibilitySettings,
   selectedBodyPart: null,
 
   setSelectedBodyPart: (bodyPartId) => {
-    set({ selectedBodyPart: bodyPartId });
+    set({
+      selectedBodyPart: bodyPartId,
+    });
 
     if (bodyPartId) {
-      const part = get().bodyParts.find((b) => b.id === bodyPartId);
+      const part = get().bodyParts.find(
+        (bodyPart) => bodyPart.id === bodyPartId
+      );
 
       if (part) {
         set({
@@ -120,7 +197,6 @@ visibilitySettings: initialVisibilitySettings,
 
   // =====================================================
   // Selected Anatomical Structure
-  // (NEW - Sprint 3.3)
   // =====================================================
 
   selectedStructure: null,
@@ -139,7 +215,7 @@ visibilitySettings: initialVisibilitySettings,
   // Pose
   // =====================================================
 
-  currentPose: 'a-pose',
+  currentPose: "a-pose",
 
   setCurrentPose: (poseId) =>
     set({
@@ -175,11 +251,13 @@ visibilitySettings: initialVisibilitySettings,
         y: 1.0,
         z: 3.5,
       },
+
       cameraTarget: {
         x: 0,
         y: 1.0,
         z: 0,
       },
+
       selectedBodyPart: null,
       selectedStructure: null,
     }),
