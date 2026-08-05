@@ -1,71 +1,131 @@
 /**
+ * =====================================================
  * Anatomy Registry
  *
- * This module is the single source of truth for anatomical
- * structures loaded into the viewer.
+ * Single source of truth for anatomical structures
+ * loaded into the viewer.
  *
- * Every selectable mesh UUID maps to a structure object.
+ * Responsibilities:
+ * - Map mesh UUID → anatomical structure
+ * - Map mesh UUID → actual Three.js mesh
+ * - Provide structure lookup
+ * - Provide mesh lookup for rendering systems
+ *
+ * Sprint 8.5.5
+ * =====================================================
  */
+
+// =====================================================
+// Registries
+// =====================================================
 
 const anatomyRegistry = new Map();
 
-/**
- * Register a structure.
- */
-export function registerStructure(structure) {
-    if (!structure) return;
+const meshRegistry = new Map();
 
-    const {
-        uuid,
-        id,
-        name,
-        system,
-        latin,
-        description,
-        region,
-        visible = true,
-        selectable = true,
-    } = structure;
+// =====================================================
+// Register Structure
+// =====================================================
 
-    if (!uuid) return;
+export function registerStructure(structure, mesh = null) {
+  if (!structure) {
+    return;
+  }
 
-    anatomyRegistry.set(uuid, {
-        uuid,
-        id,
-        name,
-        system,
-        latin,
-        description,
-        region,
-        visible,
-        selectable,
-    });
+  const {
+    uuid,
+    id,
+    name,
+    system,
+    latin,
+    description,
+    region,
+    visible = true,
+    selectable = true,
+  } = structure;
+
+  if (!uuid) {
+    return;
+  }
+
+  // ---------------------------------------------------
+  // Anatomical metadata
+  // ---------------------------------------------------
+
+  anatomyRegistry.set(uuid, {
+    uuid,
+    id,
+    name,
+    system,
+    latin,
+    description,
+    region,
+    visible,
+    selectable,
+  });
+
+  // ---------------------------------------------------
+  // Three.js mesh reference
+  // ---------------------------------------------------
+
+  if (mesh?.isMesh) {
+    meshRegistry.set(uuid, mesh);
+  }
 }
 
-/**
- * Get a structure by UUID.
- */
+// =====================================================
+// Structure Lookup
+// =====================================================
+
 export function getStructureByUUID(uuid) {
-    return anatomyRegistry.get(uuid) || null;
+  return anatomyRegistry.get(uuid) || null;
 }
 
-/**
- * Get every registered structure.
- */
+// =====================================================
+// Mesh Lookup
+// =====================================================
+
+export function getMeshByUUID(uuid) {
+  return meshRegistry.get(uuid) || null;
+}
+
+// =====================================================
+// All Structures
+// =====================================================
+
 export function getAllStructures() {
-    return Array.from(anatomyRegistry.values());
+  return Array.from(
+    anatomyRegistry.values()
+  );
 }
 
-/**
- * Remove all structures.
- */
+// =====================================================
+// All Meshes
+// =====================================================
+
+export function getAllRegisteredMeshes() {
+  return Array.from(
+    meshRegistry.values()
+  );
+}
+
+// =====================================================
+// Clear Registry
+// =====================================================
+
 export function clearRegistry() {
-    anatomyRegistry.clear();
+  anatomyRegistry.clear();
+  meshRegistry.clear();
 }
 
-/**
- * Total registered structures.
- */
+// =====================================================
+// Registry Size
+// =====================================================
+
 export function getRegistrySize() {
-    return anatomyRegistry.size;
+  return anatomyRegistry.size;
+}
+
+export function getMeshRegistrySize() {
+  return meshRegistry.size;
 }
