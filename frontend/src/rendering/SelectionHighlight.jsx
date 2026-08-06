@@ -64,7 +64,17 @@ export default function SelectionHighlight() {
     const mesh = getMeshByUUID(
       selectionContext.meshUUID
     );
-
+    
+    console.log(
+  "[SelectionHighlight] Lookup:",
+  {
+    uuid: selectionContext.meshUUID,
+    mesh,
+    isMesh: mesh?.isMesh,
+    materialInitialized:
+      mesh?.userData?.materialInitialized,
+  }
+);
     if (!mesh) {
       console.warn(
         "[SelectionHighlight] Mesh not found:",

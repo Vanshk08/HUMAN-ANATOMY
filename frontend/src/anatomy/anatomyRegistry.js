@@ -5,13 +5,15 @@
  * Single source of truth for anatomical structures
  * loaded into the viewer.
  *
- * Responsibilities:
- * - Map mesh UUID → anatomical structure
- * - Map mesh UUID → actual Three.js mesh
- * - Provide structure lookup
- * - Provide mesh lookup for rendering systems
+ * Maintains:
  *
- * Sprint 8.5.5
+ * 1. Structure Registry
+ *    mesh UUID -> canonical anatomy metadata
+ *
+ * 2. Mesh Registry
+ *    mesh UUID -> Three.js mesh
+ *
+ * Three.js meshes remain outside Zustand.
  * =====================================================
  */
 
@@ -21,14 +23,17 @@
 
 const anatomyRegistry = new Map();
 
-const meshRegistry = new Map();
+const anatomyMeshRegistry = new Map();
 
 // =====================================================
 // Register Structure
 // =====================================================
 
-export function registerStructure(structure, mesh = null) {
-  if (!structure) {
+export function registerStructure(
+  structure,
+  mesh = null
+) {
+  if (!structure?.uuid) {
     return;
   }
 
@@ -37,39 +42,81 @@ export function registerStructure(structure, mesh = null) {
     id,
     name,
     system,
+    subsystem,
+
     latin,
     description,
     region,
+
     visible = true,
     selectable = true,
+
+    displayName,
+    latinName,
+    aliases,
+    category,
+    side,
   } = structure;
 
-  if (!uuid) {
-    return;
-  }
-
-  // ---------------------------------------------------
-  // Anatomical metadata
-  // ---------------------------------------------------
+  // -----------------------------------------------------
+  // Canonical Metadata
+  // -----------------------------------------------------
 
   anatomyRegistry.set(uuid, {
     uuid,
-    id,
-    name,
-    system,
-    latin,
-    description,
-    region,
+
+    id: id ?? null,
+
+    name:
+      name ??
+      "Unknown Structure",
+
+    system:
+      system ?? null,
+
+    subsystem:
+      subsystem ?? null,
+
+    latin:
+      latin ?? "",
+
+    description:
+      description ?? "",
+
+    region:
+      region ?? "",
+
     visible,
+
     selectable,
+
+    displayName:
+      displayName ??
+      name ??
+      "Unknown Structure",
+
+    latinName:
+      latinName ?? "",
+
+    aliases:
+      aliases ?? [],
+
+    category:
+      category ?? "",
+
+    side:
+      side ?? "",
   });
 
-  // ---------------------------------------------------
-  // Three.js mesh reference
-  // ---------------------------------------------------
+  // -----------------------------------------------------
+  // Runtime Mesh Reference
+  // -----------------------------------------------------
 
   if (mesh?.isMesh) {
-    meshRegistry.set(uuid, mesh);
+    anatomyMeshRegistry.set(
+      uuid,
+      mesh
+    );
   }
 }
 
@@ -78,7 +125,14 @@ export function registerStructure(structure, mesh = null) {
 // =====================================================
 
 export function getStructureByUUID(uuid) {
-  return anatomyRegistry.get(uuid) || null;
+  if (!uuid) {
+    return null;
+  }
+
+  return (
+    anatomyRegistry.get(uuid) ??
+    null
+  );
 }
 
 // =====================================================
@@ -86,7 +140,14 @@ export function getStructureByUUID(uuid) {
 // =====================================================
 
 export function getMeshByUUID(uuid) {
-  return meshRegistry.get(uuid) || null;
+  if (!uuid) {
+    return null;
+  }
+
+  return (
+    anatomyMeshRegistry.get(uuid) ??
+    null
+  );
 }
 
 // =====================================================
@@ -100,13 +161,11 @@ export function getAllStructures() {
 }
 
 // =====================================================
-// All Meshes
+// Registry Size
 // =====================================================
 
-export function getAllRegisteredMeshes() {
-  return Array.from(
-    meshRegistry.values()
-  );
+export function getRegistrySize() {
+  return anatomyRegistry.size;
 }
 
 // =====================================================
@@ -115,17 +174,5 @@ export function getAllRegisteredMeshes() {
 
 export function clearRegistry() {
   anatomyRegistry.clear();
-  meshRegistry.clear();
-}
-
-// =====================================================
-// Registry Size
-// =====================================================
-
-export function getRegistrySize() {
-  return anatomyRegistry.size;
-}
-
-export function getMeshRegistrySize() {
-  return meshRegistry.size;
+  anatomyMeshRegistry.clear();
 }

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { anatomySystems } from "../anatomy/anatomySystems";
+import { getStructureByUUID } from "../anatomy/anatomyRegistry";
 
 // =====================================================
 // Initial Layer Visibility
@@ -15,7 +16,6 @@ const initialVisibilitySettings = anatomySystems.reduce(
 
 // =====================================================
 // Initial Visceral Subsystem Visibility
-// Sprint 8.4
 // =====================================================
 
 const initialVisceralSubsystemVisibility = {
@@ -45,13 +45,9 @@ export const useAnatomyStore = create((set, get) => ({
           : "light";
 
       if (nextTheme === "dark") {
-        document.documentElement.classList.add(
-          "dark"
-        );
+        document.documentElement.classList.add("dark");
       } else {
-        document.documentElement.classList.remove(
-          "dark"
-        );
+        document.documentElement.classList.remove("dark");
       }
 
       return {
@@ -61,13 +57,9 @@ export const useAnatomyStore = create((set, get) => ({
 
   setTheme: (theme) => {
     if (theme === "dark") {
-      document.documentElement.classList.add(
-        "dark"
-      );
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove(
-        "dark"
-      );
+      document.documentElement.classList.remove("dark");
     }
 
     set({
@@ -107,66 +99,241 @@ export const useAnatomyStore = create((set, get) => ({
 
   // =====================================================
   // Layer Visibility
+  // Sprint 8.6.6A + 8.6.6C
   // =====================================================
 
-  visibilitySettings:
-    initialVisibilitySettings,
+  visibilitySettings: initialVisibilitySettings,
+
+  // -----------------------------------------------------
+  // Toggle Layer Visibility
+  // -----------------------------------------------------
 
   toggleVisibility: (layerId) =>
-    set((state) => ({
-      visibilitySettings: {
-        ...state.visibilitySettings,
+    set((state) => {
+      const nextVisible =
+        !state.visibilitySettings[layerId];
 
-        [layerId]:
-          !state.visibilitySettings[layerId],
-      },
-    })),
+      const nextState = {
+        visibilitySettings: {
+          ...state.visibilitySettings,
+          [layerId]: nextVisible,
+        },
+      };
+
+      // -------------------------------------------------
+      // Selection Hardening
+      // -------------------------------------------------
+
+      if (
+        !nextVisible &&
+        state.selectionContext?.system === layerId
+      ) {
+        nextState.selectionContext = null;
+        nextState.selectedStructure = null;
+      }
+
+      // -------------------------------------------------
+      // Isolation Hardening
+      // -------------------------------------------------
+
+      if (
+        !nextVisible &&
+        state.isolatedStructureUUID
+      ) {
+        const isolatedStructure =
+          getStructureByUUID(
+            state.isolatedStructureUUID
+          );
+
+        if (
+          isolatedStructure?.system === layerId
+        ) {
+          nextState.isolatedStructureUUID = null;
+        }
+      }
+
+      return nextState;
+    }),
+
+  // -----------------------------------------------------
+  // Set Layer Visibility
+  // -----------------------------------------------------
 
   setVisibility: (
     layerId,
     isVisible
   ) =>
-    set((state) => ({
-      visibilitySettings: {
-        ...state.visibilitySettings,
+    set((state) => {
+      const nextState = {
+        visibilitySettings: {
+          ...state.visibilitySettings,
+          [layerId]: isVisible,
+        },
+      };
 
-        [layerId]: isVisible,
-      },
-    })),
+      // -------------------------------------------------
+      // Selection Hardening
+      // -------------------------------------------------
+
+      if (
+        !isVisible &&
+        state.selectionContext?.system === layerId
+      ) {
+        nextState.selectionContext = null;
+        nextState.selectedStructure = null;
+      }
+
+      // -------------------------------------------------
+      // Isolation Hardening
+      // Sprint 8.6.6C
+      // -------------------------------------------------
+
+      if (
+        !isVisible &&
+        state.isolatedStructureUUID
+      ) {
+        const isolatedStructure =
+          getStructureByUUID(
+            state.isolatedStructureUUID
+          );
+
+        if (
+          isolatedStructure?.system === layerId
+        ) {
+          nextState.isolatedStructureUUID = null;
+        }
+      }
+
+      return nextState;
+    }),
 
   // =====================================================
   // Visceral Subsystem Visibility
-  // Sprint 8.4
+  // Sprint 8.6.6B + 8.6.6C
   // =====================================================
 
   visceralSubsystemVisibility:
     initialVisceralSubsystemVisibility,
 
+  // -----------------------------------------------------
+  // Toggle Single Subsystem
+  // -----------------------------------------------------
+
   toggleVisceralSubsystem: (
     subsystemId
   ) =>
-    set((state) => ({
-      visceralSubsystemVisibility: {
-        ...state.visceralSubsystemVisibility,
+    set((state) => {
+      const nextVisible =
+        !state.visceralSubsystemVisibility[
+          subsystemId
+        ];
 
-        [subsystemId]:
-          !state.visceralSubsystemVisibility[
-            subsystemId
-          ],
-      },
-    })),
+      const nextState = {
+        visceralSubsystemVisibility: {
+          ...state.visceralSubsystemVisibility,
+          [subsystemId]: nextVisible,
+        },
+      };
+
+      // -------------------------------------------------
+      // Selection Hardening
+      // -------------------------------------------------
+
+      if (
+        !nextVisible &&
+        state.selectionContext?.system ===
+          "visceral" &&
+        state.selectionContext?.subsystem ===
+          subsystemId
+      ) {
+        nextState.selectionContext = null;
+        nextState.selectedStructure = null;
+      }
+
+      // -------------------------------------------------
+      // Isolation Hardening
+      // Sprint 8.6.6C
+      // -------------------------------------------------
+
+      if (
+        !nextVisible &&
+        state.isolatedStructureUUID
+      ) {
+        const isolatedStructure =
+          getStructureByUUID(
+            state.isolatedStructureUUID
+          );
+
+        if (
+          isolatedStructure?.system === "visceral" &&
+          isolatedStructure?.subsystem === subsystemId
+        ) {
+          nextState.isolatedStructureUUID = null;
+        }
+      }
+
+      return nextState;
+    }),
+
+  // -----------------------------------------------------
+  // Set Single Subsystem Visibility
+  // -----------------------------------------------------
 
   setVisceralSubsystemVisibility: (
     subsystemId,
     isVisible
   ) =>
-    set((state) => ({
-      visceralSubsystemVisibility: {
-        ...state.visceralSubsystemVisibility,
+    set((state) => {
+      const nextState = {
+        visceralSubsystemVisibility: {
+          ...state.visceralSubsystemVisibility,
+          [subsystemId]: isVisible,
+        },
+      };
 
-        [subsystemId]: isVisible,
-      },
-    })),
+      // -------------------------------------------------
+      // Selection Hardening
+      // -------------------------------------------------
+
+      if (
+        !isVisible &&
+        state.selectionContext?.system ===
+          "visceral" &&
+        state.selectionContext?.subsystem ===
+          subsystemId
+      ) {
+        nextState.selectionContext = null;
+        nextState.selectedStructure = null;
+      }
+
+      // -------------------------------------------------
+      // Isolation Hardening
+      // Sprint 8.6.6C
+      // -------------------------------------------------
+
+      if (
+        !isVisible &&
+        state.isolatedStructureUUID
+      ) {
+        const isolatedStructure =
+          getStructureByUUID(
+            state.isolatedStructureUUID
+          );
+
+        if (
+          isolatedStructure?.system === "visceral" &&
+          isolatedStructure?.subsystem === subsystemId
+        ) {
+          nextState.isolatedStructureUUID = null;
+        }
+      }
+
+      return nextState;
+    }),
+
+  // -----------------------------------------------------
+  // Set All Visceral Subsystems
+  // -----------------------------------------------------
 
   setAllVisceralSubsystems: (
     isVisible
@@ -181,10 +348,48 @@ export const useAnatomyStore = create((set, get) => ({
           isVisible;
       });
 
-      return {
+      const nextState = {
         visceralSubsystemVisibility:
           nextVisibility,
       };
+
+      // -------------------------------------------------
+      // Selection Hardening
+      // -------------------------------------------------
+
+      if (
+        !isVisible &&
+        state.selectionContext?.system ===
+          "visceral" &&
+        state.selectionContext?.subsystem
+      ) {
+        nextState.selectionContext = null;
+        nextState.selectedStructure = null;
+      }
+
+      // -------------------------------------------------
+      // Isolation Hardening
+      // Sprint 8.6.6C
+      // -------------------------------------------------
+
+      if (
+        !isVisible &&
+        state.isolatedStructureUUID
+      ) {
+        const isolatedStructure =
+          getStructureByUUID(
+            state.isolatedStructureUUID
+          );
+
+        if (
+          isolatedStructure?.system === "visceral" &&
+          isolatedStructure?.subsystem
+        ) {
+          nextState.isolatedStructureUUID = null;
+        }
+      }
+
+      return nextState;
     }),
 
   // =====================================================
@@ -207,8 +412,7 @@ export const useAnatomyStore = create((set, get) => ({
 
       return {
         currentLayer: layerId,
-        visibilitySettings:
-          newVisibility,
+        visibilitySettings: newVisibility,
       };
     }),
 
@@ -245,17 +449,9 @@ export const useAnatomyStore = create((set, get) => ({
 
   // =====================================================
   // Selection State
-  // Sprint 8.5.4
-  //
-  // selectionContext is the canonical whole-body
-  // selection state.
-  //
-  // selectedStructure remains temporarily for
-  // backwards compatibility with existing UI.
   // =====================================================
 
   selectedStructure: null,
-
   selectionContext: null,
 
   // -----------------------------------------------------
@@ -284,8 +480,6 @@ export const useAnatomyStore = create((set, get) => ({
     set({
       selectionContext: context,
 
-      // Keep legacy selection synchronized
-      // during the migration.
       selectedStructure:
         context?.structure ?? null,
     }),
@@ -297,12 +491,120 @@ export const useAnatomyStore = create((set, get) => ({
     }),
 
   // =====================================================
+  // Structure Visibility
+  // Sprint 8.6
+  // =====================================================
+
+  hiddenStructureUUIDs: [],
+
+  // -----------------------------------------------------
+  // Hide Structure
+  // -----------------------------------------------------
+
+  hideStructure: (meshUUID) =>
+    set((state) => {
+      if (!meshUUID) {
+        return state;
+      }
+
+      if (
+        state.hiddenStructureUUIDs.includes(
+          meshUUID
+        )
+      ) {
+        return state;
+      }
+
+      return {
+        hiddenStructureUUIDs: [
+          ...state.hiddenStructureUUIDs,
+          meshUUID,
+        ],
+      };
+    }),
+
+  // -----------------------------------------------------
+  // Show Structure
+  // -----------------------------------------------------
+
+  showStructure: (meshUUID) =>
+    set((state) => ({
+      hiddenStructureUUIDs:
+        state.hiddenStructureUUIDs.filter(
+          (uuid) =>
+            uuid !== meshUUID
+        ),
+    })),
+
+  // -----------------------------------------------------
+  // Restore All Hidden Structures
+  // -----------------------------------------------------
+
+  restoreAllStructures: () =>
+    set({
+      hiddenStructureUUIDs: [],
+    }),
+
+  // -----------------------------------------------------
+  // Check Structure Visibility
+  // -----------------------------------------------------
+
+  isStructureHidden: (
+    meshUUID
+  ) =>
+    get().hiddenStructureUUIDs.includes(
+      meshUUID
+    ),
+
+  // =====================================================
+  // Structure Isolation
+  // Sprint 8.6.5
+  // =====================================================
+
+  isolatedStructureUUID: null,
+
+  // -----------------------------------------------------
+  // Isolate Structure
+  // -----------------------------------------------------
+
+  isolateStructure: (
+    meshUUID
+  ) => {
+    if (!meshUUID) {
+      return;
+    }
+
+    set({
+      isolatedStructureUUID:
+        meshUUID,
+    });
+  },
+
+  // -----------------------------------------------------
+  // Exit Isolation
+  // -----------------------------------------------------
+
+  clearIsolation: () =>
+    set({
+      isolatedStructureUUID: null,
+    }),
+
+  // -----------------------------------------------------
+  // Check Isolation State
+  // -----------------------------------------------------
+
+  isIsolationActive: () =>
+    get().isolatedStructureUUID !== null,
+
+  // =====================================================
   // Pose
   // =====================================================
 
   currentPose: "a-pose",
 
-  setCurrentPose: (poseId) =>
+  setCurrentPose: (
+    poseId
+  ) =>
     set({
       currentPose: poseId,
     }),
@@ -348,8 +650,8 @@ export const useAnatomyStore = create((set, get) => ({
 
       selectedBodyPart: null,
 
-      // Clear both selection APIs.
       selectedStructure: null,
+
       selectionContext: null,
     }),
 }));

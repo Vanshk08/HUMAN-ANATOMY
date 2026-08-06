@@ -5,7 +5,6 @@ import { buildMeshRegistry } from "../utils/meshUtils";
 import { useAnatomyStore } from "../store/useAnatomyStore";
 
 import { initializeMaterials } from "../rendering/materialManager";
-
 import { resolveSelection } from "../anatomy/selectionResolver";
 
 import {
@@ -13,7 +12,6 @@ import {
 } from "../anatomy/anatomyRegistry";
 
 import { initializeAnatomy } from "../anatomy/anatomyEngine";
-
 import { printModelReport } from "../utils/modelInspector";
 
 import {
@@ -32,7 +30,6 @@ export default function AnatomySystem({
 
   // =====================================================
   // Global Selection State
-  // Sprint 8.5.4
   // =====================================================
 
   const setSelectionContext = useAnatomyStore(
@@ -60,6 +57,24 @@ export default function AnatomySystem({
   );
 
   // =====================================================
+  // Individual Structure Visibility
+  // Sprint 8.6.2
+  // =====================================================
+
+  const hiddenStructureUUIDs = useAnatomyStore(
+    (state) => state.hiddenStructureUUIDs
+  );
+
+  // =====================================================
+  // Structure Isolation
+  // Sprint 8.6.5B
+  // =====================================================
+
+  const isolatedStructureUUID = useAnatomyStore(
+    (state) => state.isolatedStructureUUID
+  );
+
+  // =====================================================
   // Mesh Registry
   // =====================================================
 
@@ -76,23 +91,39 @@ export default function AnatomySystem({
       return null;
     }
 
-    return buildVisceralSubsystemRegistry(registry);
-  }, [registry, system]);
+    return buildVisceralSubsystemRegistry(
+      registry
+    );
+  }, [
+    registry,
+    system,
+  ]);
 
   // =====================================================
   // Anatomy Registry
+  //
+  // Registers:
+  // UUID -> anatomical metadata
+  // UUID -> actual Three.js mesh
+  //
+  // Visceral structures also receive their subsystem.
   // =====================================================
 
   useEffect(() => {
     initializeAnatomy(
       registry,
-      system
+      system,
+      visceralSubsystemRegistry
     );
 
     console.log(
       `[${system}] Global registry size: ${getRegistrySize()}`
     );
-  }, [registry, system]);
+  }, [
+    registry,
+    system,
+    visceralSubsystemRegistry,
+  ]);
 
   // =====================================================
   // Materials + Inspector
@@ -170,105 +201,121 @@ export default function AnatomySystem({
   ]);
 
   // =====================================================
-  // Visceral Subsystem Visibility Engine
+  // Mesh Visibility Engine
+  // Sprint 8.6.5B
+  //
+  // SINGLE source of truth for mesh-level visibility.
+  //
+  // Visibility is composed from:
+  //
+  // 1. Individual hidden state
+  // 2. Visceral subsystem state
+  // 3. Isolation state
+  //
+  // Hide and Isolation remain independent.
   // =====================================================
 
   useEffect(() => {
-    if (
-      system !== "visceral" ||
-      !visceralSubsystemRegistry
-    ) {
-      return;
-    }
+    const hiddenUUIDs = new Set(
+      hiddenStructureUUIDs
+    );
 
     registry.forEach((mesh) => {
-      const subsystem =
-        visceralSubsystemRegistry.get(
-          mesh.uuid
-        );
+      // -------------------------------------------------
+      // Individual Structure Visibility
+      // -------------------------------------------------
 
-      // Defensive fallback:
-      // never accidentally hide an
-      // unclassified visceral structure.
-      if (!subsystem) {
-        mesh.visible = true;
+      const individuallyHidden =
+        hiddenUUIDs.has(mesh.uuid);
+
+      // -------------------------------------------------
+      // Isolation Visibility
+      //
+      // No isolation:
+      // every mesh passes.
+      //
+      // Isolation active:
+      // only the isolated UUID passes.
+      // -------------------------------------------------
+
+      const passesIsolation =
+        !isolatedStructureUUID ||
+        mesh.uuid === isolatedStructureUUID;
+
+      // -------------------------------------------------
+      // Non-Visceral Systems
+      // -------------------------------------------------
+
+      if (system !== "visceral") {
+        mesh.visible =
+          !individuallyHidden &&
+          passesIsolation;
+
         return;
       }
 
-      mesh.visible =
+      // -------------------------------------------------
+      // Visceral Systems
+      // -------------------------------------------------
+
+      const subsystem =
+        visceralSubsystemRegistry?.get(
+          mesh.uuid
+        );
+
+      // -------------------------------------------------
+      // Unclassified Visceral Structure
+      // -------------------------------------------------
+
+      if (!subsystem) {
+        mesh.visible =
+          !individuallyHidden &&
+          passesIsolation;
+
+        return;
+      }
+
+      // -------------------------------------------------
+      // Classified Visceral Structure
+      // -------------------------------------------------
+
+      const subsystemVisible =
         visceralSubsystemVisibility[
           subsystem
         ] ?? true;
+
+      mesh.visible =
+        subsystemVisible &&
+        !individuallyHidden &&
+        passesIsolation;
     });
   }, [
-    system,
     registry,
+    system,
     visceralSubsystemRegistry,
     visceralSubsystemVisibility,
+    hiddenStructureUUIDs,
+    isolatedStructureUUID,
   ]);
 
   // =====================================================
   // Whole-Body Selection
-  // Sprint 8.5.4
-  //
-  // React Three Fiber already performs raycasting.
-  // event.object is the actual intersected mesh.
   // =====================================================
 
   function handlePointerDown(event) {
-    // ===================================================
-    // STEP 1 — Verify R3F Event
-    // ===================================================
-
-    console.log("CLICK DETECTED");
-
     event.stopPropagation();
 
-    // ===================================================
-    // STEP 2 — Actual Intersected Mesh
-    // ===================================================
-
-    const clickedMesh = event.object;
-
-    console.log(
-      "EVENT OBJECT:",
-      clickedMesh
-    );
-
-    console.log(
-      "EVENT OBJECT NAME:",
-      clickedMesh?.name
-    );
-
-    console.log(
-      "EVENT OBJECT UUID:",
-      clickedMesh?.uuid
-    );
-
-    console.log(
-      "CURRENT SYSTEM:",
-      system
-    );
-
-    // ===================================================
-    // STEP 3 — Validate Mesh
-    // ===================================================
+    // React Three Fiber already performs raycasting.
+    const clickedMesh =
+      event.object;
 
     if (!clickedMesh?.uuid) {
-      console.warn(
-        "CLICKED OBJECT HAS NO UUID"
-      );
-
       clearSelectionContext();
       return;
     }
 
-    console.log(
-      "CLICKED MESH VALID"
-    );
-
     // ===================================================
-    // STEP 4 — Resolve Canonical Selection Context
+    // Resolve Canonical Selection Context
     // ===================================================
 
     const selectionContext =
@@ -276,22 +323,13 @@ export default function AnatomySystem({
         clickedMesh
       );
 
-    console.log(
-      "RESOLVED SELECTION CONTEXT:",
-      selectionContext
-    );
-
     if (!selectionContext) {
-      console.warn(
-        `[${system}] Selection resolver returned null`
-      );
-
       clearSelectionContext();
       return;
     }
 
     // ===================================================
-    // STEP 5 — Write Selection Context → Zustand
+    // Write Selection Context -> Zustand
     // ===================================================
 
     setSelectionContext(
@@ -299,31 +337,7 @@ export default function AnatomySystem({
     );
 
     // ===================================================
-    // STEP 6 — Verify Zustand
-    // ===================================================
-
-    const storeState =
-      useAnatomyStore.getState();
-
-    console.log(
-      `[${system}] ZUSTAND SELECTION`,
-      {
-        selectedStructure:
-          storeState.selectedStructure,
-
-        selectedSystem:
-          storeState.selectedSystem,
-
-        selectedSubsystem:
-          storeState.selectedSubsystem,
-
-        selectionContext:
-          storeState.selectionContext,
-      }
-    );
-
-    // ===================================================
-    // Final Selection Report
+    // Development Verification
     // ===================================================
 
     console.group(
@@ -356,7 +370,11 @@ export default function AnatomySystem({
   // =====================================================
   // Render / Interaction Boundary
   //
-  // Hidden systems must not participate in raycasting.
+  // System-level visibility remains separate from
+  // mesh-level visibility.
+  //
+  // A disabled system is completely removed from the
+  // R3F render/raycast tree.
   // =====================================================
 
   if (!visible) {

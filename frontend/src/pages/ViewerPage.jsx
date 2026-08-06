@@ -11,6 +11,7 @@ import NavigationCube from '../components/NavigationCube';
 import CameraControls from '../components/CameraControls';
 import ThemeToggle from '../components/ThemeToggle';
 import SelectedStructurePanel from '../components/SelectedStructurePanel';
+import StructureActions from '../components/StructureActions';
 
 import { useAnatomyStore } from '../store/useAnatomyStore';
 
@@ -45,6 +46,7 @@ export default function ViewerPage() {
         <div className="flex justify-between items-start w-full">
 
           {/* Top Left */}
+
           <div className="flex flex-col gap-4">
 
             <motion.button
@@ -196,23 +198,34 @@ export default function ViewerPage() {
 
         <div className="flex justify-between items-end w-full">
 
-          {/* Bottom Left */}
+          {/* =================================================
+              Bottom Left
 
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 20,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{
-              delay: 0.3,
-            }}
-          >
-            <CameraControls />
-          </motion.div>
+              Structure actions stay separate from camera
+              controls while sharing the same HUD region.
+          ================================================= */}
+
+          <div className="flex flex-col items-start gap-2">
+
+            <StructureActions />
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: 0.3,
+              }}
+            >
+              <CameraControls />
+            </motion.div>
+
+          </div>
 
           {/* Bottom Right */}
 
@@ -255,14 +268,14 @@ export default function ViewerPage() {
           </motion.div>
 
         </div>
+
       </div>
 
       {/* =====================================================
           SELECTED STRUCTURE PANEL
 
-          IMPORTANT:
-          This stays OUTSIDE the pointer-events-none HUD.
-          Otherwise the close button could become problematic.
+          Kept outside the pointer-events-none HUD because
+          the panel contains interactive controls.
       ===================================================== */}
 
       <SelectedStructurePanel />

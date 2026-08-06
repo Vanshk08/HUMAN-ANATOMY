@@ -5,54 +5,69 @@ import { resolveMetadata } from "./metadataResolver";
  * =====================================================
  * Anatomy Engine
  *
- * Converts loaded Three.js meshes into anatomical
- * structures and registers both:
+ * Initializes anatomical structures from a mesh registry.
  *
- * UUID → Structure Metadata
- * UUID → Three.js Mesh
+ * Registers:
+ * - canonical anatomical metadata
+ * - runtime Three.js mesh reference
  *
- * The registry lifecycle is controlled by AnatomyLoader.
+ * visceralSubsystemRegistry is optional.
  *
- * Sprint 8.5.5
+ * Map structure:
+ * meshUUID -> subsystem
+ *
+ * Example:
+ * "uuid-123" -> "respiratory"
  * =====================================================
  */
 
-export function initializeAnatomy(meshRegistry, system) {
+export function initializeAnatomy(
+  meshRegistry,
+  system,
+  visceralSubsystemRegistry = null
+) {
   if (!meshRegistry) {
     return;
   }
 
   meshRegistry.forEach((mesh) => {
     // ===================================================
-    // Resolve Anatomical Metadata
+    // Validate Mesh
     // ===================================================
 
-    const structure = resolveMetadata(
-      mesh,
-      system
-    );
+    if (!mesh?.isMesh) {
+      return;
+    }
+
+    // ===================================================
+    // Resolve Optional Subsystem
+    // ===================================================
+
+    const subsystem =
+      visceralSubsystemRegistry?.get(
+        mesh.uuid
+      ) ?? null;
+
+    // ===================================================
+    // Resolve Canonical Metadata
+    // ===================================================
+
+    const structure =
+      resolveMetadata(
+        mesh,
+        system,
+        subsystem
+      );
 
     if (!structure) {
       return;
     }
 
     // ===================================================
-    // Register Structure + Physical Mesh
+    // Register Structure + Runtime Mesh
     //
-    // This allows:
-    //
-    // mesh UUID
-    //    ↓
-    // anatomical structure
-    //
-    // AND
-    //
-    // mesh UUID
-    //    ↓
-    // actual Three.js mesh
-    //
-    // The second mapping is required for highlighting,
-    // isolation, transparency, focus, etc.
+    // IMPORTANT:
+    // SelectionHighlight needs the actual Three.js mesh.
     // ===================================================
 
     registerStructure(

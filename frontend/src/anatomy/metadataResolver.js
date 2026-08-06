@@ -5,10 +5,14 @@ import { resolveStructureId } from "./structureIdResolver";
  * Resolves a Three.js mesh into the canonical
  * anatomy structure.
  *
- * The physical system is supplied by the runtime
- * that owns the loaded GLB.
+ * The physical system and optional subsystem are supplied
+ * by the runtime that owns/classifies the loaded GLB.
  */
-export function resolveMetadata(mesh, system) {
+export function resolveMetadata(
+  mesh,
+  system,
+  subsystem = null
+) {
   const displayName =
     mesh.name || "Unknown Structure";
 
@@ -19,9 +23,17 @@ export function resolveMetadata(mesh, system) {
 
     id: resolveStructureId(mesh),
 
-    // Canonical registry fields
+    // ===================================================
+    // Canonical Anatomy Identity
+    // ===================================================
+
     name: displayName,
-    system: system ?? null,
+
+    system:
+      system ?? null,
+
+    subsystem:
+      subsystem ?? null,
 
     latin: "",
     description: "",
@@ -30,7 +42,10 @@ export function resolveMetadata(mesh, system) {
     visible: true,
     selectable: true,
 
-    // Extended metadata
+    // ===================================================
+    // Extended Metadata
+    // ===================================================
+
     displayName,
     latinName: "",
     aliases: [],

@@ -3,7 +3,6 @@ import { useAnatomyStore } from "../store/useAnatomyStore";
 export default function SelectedStructurePanel() {
   // =====================================================
   // Canonical Selection State
-  // Sprint 8.5.4
   // =====================================================
 
   const selectionContext = useAnatomyStore(
@@ -12,6 +11,23 @@ export default function SelectedStructurePanel() {
 
   const clearSelectionContext = useAnatomyStore(
     (state) => state.clearSelectionContext
+  );
+
+  // =====================================================
+  // Structure Actions
+  // Sprint 8.6
+  // =====================================================
+
+  const hideStructure = useAnatomyStore(
+    (state) => state.hideStructure
+  );
+
+  const isolateStructure = useAnatomyStore(
+    (state) => state.isolateStructure
+  );
+
+  const isolatedStructureUUID = useAnatomyStore(
+    (state) => state.isolatedStructureUUID
   );
 
   // =====================================================
@@ -27,6 +43,7 @@ export default function SelectedStructurePanel() {
   // =====================================================
 
   const {
+    meshUUID,
     structure,
     system,
     subsystem,
@@ -37,6 +54,40 @@ export default function SelectedStructurePanel() {
     structure.name ||
     structure.id ||
     "Unknown Structure";
+
+  const isCurrentStructureIsolated =
+    isolatedStructureUUID === meshUUID;
+
+  // =====================================================
+  // Hide Structure
+  // =====================================================
+
+  function handleHideStructure() {
+    if (!meshUUID) {
+      return;
+    }
+
+    hideStructure(meshUUID);
+
+    // Hidden structure can no longer remain selected.
+    clearSelectionContext();
+  }
+
+  // =====================================================
+  // Isolate Structure
+  // Sprint 8.6.5C
+  // =====================================================
+
+  function handleIsolateStructure() {
+    if (!meshUUID) {
+      return;
+    }
+
+    isolateStructure(meshUUID);
+
+    // Do NOT clear selection.
+    // The isolated structure remains visible and selected.
+  }
 
   // =====================================================
   // Render
@@ -63,7 +114,10 @@ export default function SelectedStructurePanel() {
         dark:text-white
       "
     >
-      {/* Header */}
+      {/* =================================================
+          Header
+      ================================================= */}
+
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
@@ -99,7 +153,10 @@ export default function SelectedStructurePanel() {
         </button>
       </div>
 
-      {/* System */}
+      {/* =================================================
+          System
+      ================================================= */}
+
       <div className="border-t border-gray-100 py-3 dark:border-gray-800">
         <p className="text-xs uppercase tracking-wide text-gray-400">
           System
@@ -110,7 +167,10 @@ export default function SelectedStructurePanel() {
         </p>
       </div>
 
-      {/* Subsystem */}
+      {/* =================================================
+          Subsystem
+      ================================================= */}
+
       <div className="border-t border-gray-100 py-3 dark:border-gray-800">
         <p className="text-xs uppercase tracking-wide text-gray-400">
           Subsystem
@@ -121,9 +181,12 @@ export default function SelectedStructurePanel() {
         </p>
       </div>
 
-      {/* Structure ID */}
+      {/* =================================================
+          Structure ID
+      ================================================= */}
+
       {structure.id && (
-        <div className="border-t border-gray-100 pt-3 dark:border-gray-800">
+        <div className="border-t border-gray-100 py-3 dark:border-gray-800">
           <p className="text-xs uppercase tracking-wide text-gray-400">
             Structure ID
           </p>
@@ -133,6 +196,85 @@ export default function SelectedStructurePanel() {
           </p>
         </div>
       )}
+
+      {/* =================================================
+          Structure Actions
+          Sprint 8.6.5C
+      ================================================= */}
+
+      <div className="border-t border-gray-100 pt-4 dark:border-gray-800">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          Actions
+        </p>
+
+        <div className="flex flex-col gap-2">
+
+          {/* Isolate */}
+
+          <button
+            type="button"
+            onClick={handleIsolateStructure}
+            disabled={isCurrentStructureIsolated}
+            className="
+              w-full
+              rounded-xl
+              border
+              border-gray-200
+              px-4
+              py-2.5
+              text-sm
+              font-medium
+              text-gray-700
+              transition
+
+              hover:bg-gray-100
+              hover:text-gray-900
+
+              disabled:cursor-default
+              disabled:opacity-50
+
+              dark:border-gray-700
+              dark:text-gray-300
+              dark:hover:bg-neutral-800
+              dark:hover:text-white
+            "
+          >
+            {isCurrentStructureIsolated
+              ? "Structure Isolated"
+              : "Isolate Structure"}
+          </button>
+
+          {/* Hide */}
+
+          <button
+            type="button"
+            onClick={handleHideStructure}
+            className="
+              w-full
+              rounded-xl
+              border
+              border-gray-200
+              px-4
+              py-2.5
+              text-sm
+              font-medium
+              text-gray-700
+              transition
+
+              hover:bg-gray-100
+              hover:text-gray-900
+
+              dark:border-gray-700
+              dark:text-gray-300
+              dark:hover:bg-neutral-800
+              dark:hover:text-white
+            "
+          >
+            Hide Structure
+          </button>
+
+        </div>
+      </div>
     </div>
   );
 }
